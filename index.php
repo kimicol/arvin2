@@ -15,89 +15,6 @@ $token = (isset($_GET['token']) ? $_GET['token'] : '');
 $token_ok = (token_found($arv_config['tokens_dir'], $token) >= 2);
     
 $f = 'Archives_HMAP.csv';
-
-// Instuments minimum pour pouvoir jouer un morceau
-// Ex: au moins flûte 1, clar 1, sax 1, etc. 
-$instru_oblig = array(
-    'Conducteur',
-    'Flûte 1',
-    'Hautbois 1 ',
-    'Clarinette 1 Sib',
-    'Clarinette Basse',
-    'Sax Alto 1',
-    'Sax Ténor 1 ',
-    'Sax Baryton',
-    'Trompette 1',
-    'Cor fa 1 + Mib',
-    'Trombone Ut 1',
-    'Baryton sib clé de sol',
-    'Basse Sib clé de fa',
-    'Batterie',
-    'Percussion 1',
-);
-
-// Tous les instruments de l'HMAP
-// $instru_oblig + piccolo, flûte 2, clar 2/3, sax 2/3, etc.
-$instru_hmap =
-array(
-    'Piccolo',
-    'Flûte 2 ',
-    'Hautbois 2',
-    'Clarinette 2 Sib',
-    'Clarinette 3 Sib',
-    'Sax Alto 2 ',
-    'Sax Alto 3 ',
-    'Sax Ténor 2',
-    'Bugle 1',
-    'Bugle 2',
-    'Cornet 1',
-    'Cornet 2',
-    'Cornet 3',
-    'Trompette 2',
-    'Trompette 3',
-    'Cor fa 2 + Mib',
-    'Trombone Ut 2',
-    'Tuba sib clé de fa',
-    'Euphonium Ut clé de fa',
-    'Euph 1 Sib clé de fa + sol',
-    'Basse Sib clé de sol',
-    'Percussion 2',
-    'Timbales',
-);
-
-$instru_hmap = array_merge($instru_hmap, $instru_oblig);
-
-// Autres instrus
-/*
-    'Ptte flûte réb',
-    'Basson 1',
-    'Basson 2',
-    'Petite Clarinette Mib',
-    'Clarinette Alto',
-    'Clarinette Solo',
-    'Sax. Soprano',
-    'Sax Basse',
-    'Cor fa 3 + Mib',
-    'Cor fa 4 + Mib',
-    'Trombone Ut 3',
-    'Trombone Ut 4',
-    'Trombone Sib 1 clé fa',
-    'Trombone Sib2 Clé fa',
-    'Trombone Sib3 clé fa',
-    'Trombone Sib 4 clé fa',
-    'Trombone sib 1 clé sol',
-    'TromboneSib2 clé de sol',
-    'Trombone Sib 3 clé de sol',
-    'Tuba Ut clé de fa',
-    'Euphonium 2 Sib clé de fa',
-    'Contrebasse Sib clé de fa',
-    'Contrebasse Sib clé de sol',
-    'Contrebasse Mib clé de fa',
-    'Contrebasse Mib clé de sol',
-    'Contrebasse Ut clé de Fa',
-    'Divers',
-*/
-
 ?>
 <!DOCTYPE html>
 <html>
@@ -183,7 +100,6 @@ Tri par <select name="t">
 <option value="0" <?php if($tv==0) echo 'selected' ?>>Titre</option>
 <option value="1" <?php if($tv==1) echo 'selected' ?>>Auteur</option>
 <option value="2" <?php if($tv==2) echo 'selected' ?>>Référence</option>
-<option value="3" <?php if($tv==3) echo 'selected' ?>>Complétion</option>
 </select>
 <!--
      <input type="checkbox" id="l" name="l" <?php if($lv) echo 'checked' ?>/><label for="l">avec instruments</label>
@@ -212,7 +128,6 @@ function tri_ligne($a, $b, $i)
 function tri_par_titre($a, $b) {return tri_ligne($a, $b, 0);}
 function tri_par_auteur($a, $b) {return tri_ligne($a, $b, 1);}
 function tri_par_ref($a, $b) {return tri_ligne($a, $b, 3);}
-function tri_par_completion($a, $b) {return tri_ligne($a, $b, 'completion');}
 
 switch($tv)
 {
@@ -226,28 +141,6 @@ switch($tv)
     case 2:
     usort($data, 'tri_par_ref');
     break;
-    case 3:
-    $data_sorted = array();
-    foreach($data as $k => $l)
-    {
-        $oblig_compt = 0;
-        $hmap_compt = 0;
-        for($j=4; $j<count($l);$j++)
-        {
-            if(!$entete[$j]) continue; // passe les colonnes vides
-            
-            $en_stock = ($l[$j] !== '' && $l[$j] !== '0');
-            if($en_stock && in_array($entete[$j], $instru_oblig)) $oblig_compt++;
-            if($en_stock && in_array($entete[$j], $instru_hmap)) $hmap_compt++;
-        }
-        $key = sprintf('%03d', (int)(100*$oblig_compt/count($instru_oblig))).'_'.
-               sprintf('%03d', (int)(100*$hmap_compt/count($instru_hmap))).'_'.
-               $l[3]; // reference pour le tri en cas d'égalité
-        $data_sorted[$key] = $l;
-    }
-    krsort($data_sorted);
-    $data = array_values($data_sorted);
-    break;
 }
 
 $pgm = array();
@@ -259,7 +152,6 @@ if(substr($sv, 0, 4) == 'pgm:'
         $arv_config['pgm_dir'].'/'.substr($sv, 4).'.txt',
         FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 }
-//print_r($pgm);
 
 echo '<table>';
 echo '<tr>';
@@ -273,7 +165,7 @@ foreach($entete as $c)
         if($i>=4) break;
     }
 }
-//echo '<th>Complétion<br/>Base / HMAP</th>'; // Désactivation complétion
+
 if($token_ok)
 {
     echo '<th>Téléchargement</th>';
@@ -328,11 +220,6 @@ foreach($data as $l)
         if($en_stock && in_array($entete[$j], $instru_oblig)) $oblig_compt++;
         if($en_stock && in_array($entete[$j], $instru_hmap)) $hmap_compt++;
     }
-    /*
-       // Désactivation complétion
-       echo '<td>'.(int)(100*$oblig_compt/count($instru_oblig)).'% / '.
-       (int)(100*$hmap_compt/count($instru_hmap)).'%</td>';
-     */
     if($token_ok && is_dir($arv_config['docs_dir'].'/'.$l[3]))
     {
         echo '<td><a href="list.php?ref='.$l[3].'&token='.$_GET['token'].'">Documents</a></td>';
@@ -346,7 +233,6 @@ foreach($data as $l)
     if($lv)
     {
         echo '</table>';
-        //var_dump($l);
         echo '<ul>';
         $oblig_compt = 0;
         for($j=4; $j<count($l);$j++)
@@ -411,7 +297,6 @@ foreach($programmes as $k => $p)
     }
     echo '<br/>';
 }
-//echo '</p>';
 
 
 ?>
