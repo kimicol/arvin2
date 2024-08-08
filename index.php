@@ -85,12 +85,15 @@ $theme->getBanner();
 ?>
 
 <?php
-$sv = ''; $tv = '';
+$sv = ''; $tv = ''; $iv = '';
 // recherche
 if(isset($_GET['s'])) $sv = htmlspecialchars($_GET['s']);
+// instrument
+if(isset($_GET['i'])) $iv = htmlspecialchars($_GET['i']);
 // token
 if(isset($_GET['t'])) $tv = (int)($_GET['t']);
 ?>
+
 <!-- <p style="float:right;padding:0;margin:0"><em><?php echo $f ?></em></p> -->
     <h1 class="entry-title">Arvin <span style="color:#ff379b">l'archiviste</span></h1>
 
@@ -142,6 +145,51 @@ if(isset($_GET['t'])) $tv = (int)($_GET['t']);
     <input type="submit" value="Voir le programme"/>
 </form>
 <br/>
+
+<!-- Select an instrument -->
+<form>
+    <?php
+    if($token_ok)
+    {
+        echo '<input type="hidden" name="token" value="'.$token.'" />';
+    }
+    ?>
+    Télécharger toutes les partitions d'un instrument :
+
+    <select name="inst">
+        <?php
+            echo "<option value=\"\"";
+            if(substr($iv, 0, 4) != 'inst:') echo " selected";
+            echo ">Tous les instruments</option>";
+
+            $instruments = get_instruments('private/docs/instruments.csv');
+            ksort($instruments);
+
+            foreach($instruments as $instr)
+            {
+                $instr_name = $instr["name_fr"];
+                echo "<option value=\"inst:{$instr_name}\"";
+                if($iv == "inst:{$instr_name}") echo " selected";
+                echo ">{$instr_name}</option>";
+            }
+        ?>
+    </select>
+    <select name="number">
+        <?php
+            for($instnum = 1; $instnum <= 4; $instnum++)
+            {
+                echo "<option value=\"instnum:{$instnum}\">";
+                echo "{$instnum}";
+                echo "</option>";
+            }
+            echo "<option value=\"\">";
+            echo "Toutes les parties";
+            echo "</option>";
+        ?>
+    </select>
+    <!-- FIXME -->
+    <input type="submit" value="Télécharger"/>
+</form>
 
 <form method="get" class="noprint">
 <?php
@@ -252,10 +300,6 @@ foreach($data as $l)
     echo "</div>\n";
 }
 echo '</div>';
-
-//echo '</p>';
-
-
 ?>
 </div>
 </body>
